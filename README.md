@@ -1,46 +1,58 @@
-# Antigravity Download Manager (AntigravityDM)
+# Universal Download Manager (UDM)
 
-A high-performance personal Internet Download Manager alternative native to Windows, with unified multi-part downloading, queue management, Telegram MTProto integration, automatic channel scraping, and browser integration.
+A high-performance personal Internet Download Manager alternative native to Windows, featuring multi-connection acceleration, queue scheduling, Telegram MTProto streaming, automatic channel scraping, and browser integration.
 
 ---
 
-## What is Inside `AntigravityDM.exe` (All-in-One Desktop App)
-
-Everything has been consolidated into a **single, standalone Windows application** (`E:\Code\DM\AntigravityDM.exe`):
+## Features
 
 1. **Native Windows Fluent GUI (Dark Theme)**
    * Powered by the native Windows WebView2 runtime (Edge Chromium engine).
    * Butter-smooth 60fps animations, responsive layout, dark theme.
-   * Runs as a true native desktop application without background command prompts.
+   * Compiles to a single standalone Windows executable `UDM.exe`.
 
-2. **Full Queue Management**
-   * Add, Pause, Resume, and Delete individual downloads or use **Pause All / Resume All**.
-   * Concurrency scheduler: keeps up to $N$ active downloads (default: 3) while remaining items wait in queue.
-   * Checkpointed state: interrupted downloads resume from the exact byte on app restart.
+2. **Multi-Connection Segmented Download Engine**
+   * Concurrent byte-range downloads (4, 8, 16, 32 connections).
+   * Direct-offset random access disk writes (`os.File.WriteAt`) with zero-reassembly overhead.
+   * Checkpointing (`.dmstate`) with forward-progress retry tracking.
 
-3. **Storage & Temp Location Control (Settings)**
-   * **Download Directory:** Configure where finished files are stored.
-   * **Temporary Directory (Temp):** Configure where active partial segments are written during download (supports dedicated fast SSDs or scratch drives).
-   * Automatic cross-drive file relocation on download completion.
+3. **Telegram MTProto Integration**
+   * Connects directly to Telegram's Data Centers via MTProto without third-party cloud bot bottlenecks.
+   * Automatic Data Center migration (seamlessly redirects to DC 1, DC 2, DC 4, etc.).
+   * 32-channel connection pool with asynchronous chunk prefetching.
 
-4. **Telegram Channel Media Scraper & Batch Downloader**
-   * Paste any Telegram channel link (e.g. `https://t.me/c/4308160059` or `https://t.me/channelname`).
-   * Scans channel messages using MTProto and displays all media (movies, archives, software, documents) in a searchable table.
-   * 1-Click **"⚡ Download Selected"**: Batch-enqueues selected files into the download manager automatically!
+4. **Queue Management & Storage Control**
+   * Max concurrent downloads scheduler (active downloads run, remaining wait in queue).
+   * Pause, Resume, Delete, Pause All, Resume All.
+   * Custom Save Location per download with native Windows **Browse...** folder picker.
+   * Dedicated Temp Directory support to protect main OS drives from fragmentation.
 
-5. **Browser & Clipboard Integration**
-   * **Clipboard Auto-Sniffer:** When you copy any download URL or Telegram link in Windows, the app automatically detects it and prompts you to start the download.
-   * **1-Click Bookmarklet:** Drag the bookmarklet from Settings into Chrome/Edge/Brave to send any webpage's file directly to Antigravity DM with one click.
-   * **REST API:** Listens on `http://127.0.0.1:8080/api/queue/add?url=...` for browser extensions.
+5. **Channel Media Scraper & Batch Downloader**
+   * Scans any Telegram channel for movies, videos, documents, and archives.
+   * 1-Click **"⚡ Download Selected"** batch enqueuing.
+
+6. **Browser Integration**
+   * Background Windows Clipboard Auto-Sniffer.
+   * 1-Click Drag-and-Drop Browser Bookmarklet.
+   * Local REST API (`/api/queue/add?url=...`).
 
 ---
 
-## How to Run
+## How to Build & Run
 
-Simply double-click or run from PowerShell:
+### Running the Desktop GUI:
 ```powershell
 cd E:\Code\DM
-.\AntigravityDM.exe
+.\UDM.exe
 ```
 
-The desktop app window will immediately launch!
+### Running the CLI Engine:
+```powershell
+.\dm.exe -c 16 "https://example.com/largefile.zip"
+```
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).

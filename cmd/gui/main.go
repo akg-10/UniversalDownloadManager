@@ -317,14 +317,14 @@ func main() {
 	time.Sleep(250 * time.Millisecond)
 
 	appURL := fmt.Sprintf("http://127.0.0.1:%d", *portFlag)
-	fmt.Printf("[+] Antigravity Download Manager GUI running at %s\n", appURL)
+	fmt.Printf("[+] Universal Download Manager GUI running at %s\n", appURL)
 
 	// Launch Native Windows WebView2 Desktop Window
 	w := webview2.NewWithOptions(webview2.WebViewOptions{
 		Debug:     false,
 		AutoFocus: true,
 		WindowOptions: webview2.WindowOptions{
-			Title:  "Antigravity Download Manager",
+			Title:  "Universal Download Manager",
 			Width:  1120,
 			Height: 740,
 			IconId: 2,

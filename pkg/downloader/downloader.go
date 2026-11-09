@@ -27,7 +27,7 @@ func DefaultConfig() Config {
 	return Config{
 		Concurrency:      8,
 		OutputDir:        ".",
-		UserAgent:        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Antigravity-DM/1.0",
+		UserAgent:        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Universal-Download-Manager/1.0",
 		MaxRetries:       15,
 		ProgressInterval: 200 * time.Millisecond,
 	}

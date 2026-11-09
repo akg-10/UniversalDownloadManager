@@ -62,7 +62,7 @@ func downloadChunk(
 		if userAgent != "" {
 			req.Header.Set("User-Agent", userAgent)
 		} else {
-			req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Antigravity-DM/1.0")
+			req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Universal-Download-Manager/1.0")
 		}
 
 		if endOffset > 0 {

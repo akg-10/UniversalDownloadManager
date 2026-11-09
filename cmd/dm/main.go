@@ -49,7 +49,7 @@ func main() {
 	dl := downloader.New(cfg)
 
 	fmt.Println("==========================================================")
-	fmt.Println("  Antigravity Download Manager (Engine v1.0 - Native Win64)")
+	fmt.Println("  Universal Download Manager (Engine v1.0 - Native Win64)")
 	fmt.Println("==========================================================")
 	fmt.Printf("[*] Probing target URL...\n    %s\n", targetURL)
 

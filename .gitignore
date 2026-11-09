@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+*.syso
 bin/
 
 # Telegram credentials, session keys & user data (CRITICAL - NEVER COMMIT)

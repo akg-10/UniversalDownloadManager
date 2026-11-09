@@ -1,6 +1,11 @@
 # Universal Download Manager (UDM)
 
+[![Built with Antigravity](https://img.shields.io/badge/Built%20with-Antigravity-4285F4?style=flat-square&logo=google)](https://github.com/google-deepmind)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A high-performance personal Internet Download Manager alternative native to Windows, featuring multi-connection acceleration, queue scheduling, Telegram MTProto streaming, automatic channel scraping, and browser integration.
+
+> *Developed with **[Antigravity](https://antigravity.google)** — Google DeepMind's advanced agentic coding environment.*
 
 ---
 
@@ -50,6 +55,12 @@ cd E:\Code\DM
 ```powershell
 .\dm.exe -c 16 "https://example.com/largefile.zip"
 ```
+
+---
+
+## Acknowledgements
+
+Built and pair-programmed using **Antigravity**, Google DeepMind's agentic AI coding assistant.
 
 ---
 

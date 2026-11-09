@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antigravity Download Manager</title>
+  <style>
+    :root {
+      --bg-base: #0b0f19;
+      --bg-sidebar: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #243248;
+      --border: #334155;
+      --border-focus: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0ea5e9;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-base); color: var(--text); height: 100vh; display: flex; overflow: hidden; user-select: none; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; background: var(--bg-sidebar); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 1.25rem 0.75rem; }
+    .brand { display: flex; align-items: center; gap: 0.6rem; padding: 0 0.5rem 1.5rem 0.5rem; border-bottom: 1px solid var(--border); }
+    .brand-icon { font-size: 1.4rem; }
+    .brand-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.02em; color: #fff; }
+    .nav { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.35rem; flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem 0.85rem; border-radius: var(--radius); color: var(--text-muted); cursor: pointer; font-size: 0.9rem; font-weight: 500; transition: all 0.2s; }
+    .nav-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--text); }
+    .nav-item.active { background: rgba(56, 189, 248, 0.15); color: var(--accent); font-weight: 600; }
+    .sidebar-footer { font-size: 0.75rem; color: var(--text-muted); padding: 0.5rem; text-align: center; border-top: 1px solid var(--border); }
+
+    /* Main Content */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); }
+    .topbar-left { display: flex; align-items: center; gap: 1rem; }
+    .page-title { font-size: 1.2rem; font-weight: 700; }
+    .topbar-right { display: flex; align-items: center; gap: 0.75rem; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 0.9rem; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.2s; white-space: nowrap; }
+    .btn-primary { background: var(--accent); color: #0b0f19; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--bg-card-hover); }
+    .btn-danger { background: rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.25); }
+
+    /* Views */
+    .content-area { flex: 1; overflow-y: auto; padding: 1.5rem; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Download Cards */
+    .queue-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .download-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; transition: border-color 0.2s; position: relative; }
+    .download-card:hover { border-color: rgba(56, 189, 248, 0.4); }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem; }
+    .card-info { flex: 1; margin-right: 1rem; }
+    .card-title { font-size: 0.95rem; font-weight: 600; color: #fff; word-break: break-all; margin-bottom: 0.2rem; }
+    .card-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+    .card-actions { display: flex; gap: 0.4rem; }
+    .btn-icon { width: 30px; height: 30px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; font-size: 0.8rem; }
+    .btn-icon:hover { background: rgba(255, 255, 255, 0.1); color: var(--accent); }
+    .progress-bar-bg { width: 100%; height: 6px; background: #0b1120; border-radius: 3px; overflow: hidden; margin: 0.6rem 0; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, #38bdf8, #818cf8); border-radius: 3px; width: 0%; transition: width 0.3s ease; }
+    .card-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.5rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
+    .status-Downloading { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
+    .status-Completed { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .status-Paused { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .status-Error { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .status-Queued { background: rgba(148, 163, 184, 0.15); color: var(--text-muted); }
+
+    /* Scraper Table */
+    .table-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-top: 1rem; }
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    th { background: rgba(0, 0, 0, 0.2); padding: 0.75rem 1rem; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); }
+    td { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: rgba(255, 255, 255, 0.02); }
+
+    /* Forms & Settings */
+    .form-group { margin-bottom: 1.25rem; }
+    .form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: #fff; }
+    .form-desc { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .form-input { width: 100%; background: #0b1120; border: 1px solid var(--border); border-radius: var(--radius); padding: 0.65rem 0.85rem; color: #fff; font-size: 0.9rem; outline: none; }
+    .form-input:focus { border-color: var(--accent); }
+    .form-row { display: flex; gap: 1rem; }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+
+    /* Modals */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; width: 520px; max-width: 92%; padding: 1.5rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+    .modal-title { font-size: 1.1rem; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1.5rem; }
+
+    /* Toast */
+    .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; z-index: 200; }
+    .toast { background: var(--bg-card); border: 1px solid var(--accent); border-radius: var(--radius); padding: 0.85rem 1.25rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); font-size: 0.85rem; display: flex; align-items: center; gap: 0.75rem; animation: slideIn 0.3s ease; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="brand">
+      <span class="brand-icon">⚡</span>
+      <span class="brand-title">Antigravity DM</span>
+    </div>
+
+    <div class="nav">
+      <div class="nav-item active" onclick="switchTab('downloads')">
+        <span>📥</span> Downloads
+      </div>
+      <div class="nav-item" onclick="switchTab('scraper')">
+        <span>📡</span> Telegram Scraper
+      </div>
+      <div class="nav-item" onclick="switchTab('settings')">
+        <span>⚙️</span> Settings
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div>Engine v1.0 • Multi-Connection</div>
+    </div>
+  </div>
+
+  <!-- Main Area -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <h1 class="page-title" id="pageTitle">Downloads</h1>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-secondary" onclick="pauseAll()">⏸ Pause All</button>
+        <button class="btn btn-secondary" onclick="resumeAll()">▶ Resume All</button>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Download</button>
+      </div>
+    </div>
+
+    <div class="content-area">
+      <!-- 1. Downloads View -->
+      <div class="view active" id="view-downloads">
+        <div class="queue-list" id="queueList">
+          <div style="text-align: center; color: var(--text-muted); margin-top: 4rem;">
+            No downloads in queue. Click <b>+ Add Download</b> to start.
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Telegram Scraper View -->
+      <div class="view" id="view-scraper">
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem;">
+          <h2 style="font-size: 1.05rem; margin-bottom: 0.35rem;">Automatic Channel Media Scraper</h2>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Scan any Telegram channel to extract all movies, archives, and files with 1-click batch download.
+          </p>
+
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="scraperUrl" class="form-input" placeholder="https://t.me/c/4308160059 or https://t.me/channel">
+            <select id="scraperLimit" class="form-input" style="width: 140px;">
+              <option value="50">Last 50 msgs</option>
+              <option value="100" selected>Last 100 msgs</option>
+              <option value="200">Last 200 msgs</option>
+            </select>
+            <button class="btn btn-primary" id="btnScan" onclick="scanChannel()">Scan Channel</button>
+          </div>
+        </div>
+
+        <div id="scraperLoading" style="display: none; text-align: center; margin: 2rem 0; color: var(--accent);">
+          Scanning Telegram MTProto messages...
+        </div>
+
+        <div id="scraperResults" style="display: none; margin-top: 1.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <div style="font-size: 0.9rem; font-weight: 600;" id="scraperCount">Found 0 files</div>
+            <button class="btn btn-primary" onclick="addSelectedToQueue()">⚡ Download Selected</button>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40px;"><input type="checkbox" id="checkAll" onchange="toggleSelectAll()"></th>
+                  <th>Filename</th>
+                  <th style="width: 110px;">Size</th>
+                  <th style="width: 140px;">Date</th>
+                </tr>
+              </thead>
+              <tbody id="scraperTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Settings View -->
+      <div class="view" id="view-settings">
+        <div style="max-width: 600px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Storage & Queue Settings</h2>
+
+          <div class="form-group">
+            <label class="form-label">Default Download Directory</label>
+            <div class="form-desc">Where completed files are saved by default.</div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="cfgDownloadDir" class="form-input">
+              <button type="button" class="btn btn-secondary" onclick="browseFolder('cfgDownloadDir')">Browse...</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Temporary Directory (Temp)</label>
+            <div class="form-desc">Where active partial segments are written before completion.</div>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="cfgTempDir" class="form-input">
+              <button type="button" class="btn btn-secondary" onclick="browseFolder('cfgTempDir')">Browse...</button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Max Concurrent Downloads</label>
+              <input type="number" id="cfgMaxConcurrent" class="form-input" min="1" max="10">
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Connections per Download (Parts)</label>
+              <input type="number" id="cfgDefaultParts" class="form-input" min="1" max="32">
+            </div>
+          </div>
+
+          <div class="toggle-row">
+            <div>
+              <div class="form-label" style="margin: 0;">Clipboard Auto-Sniffer</div>
+              <div class="form-desc" style="margin: 0;">Automatically prompt when download/Telegram links are copied.</div>
+            </div>
+            <input type="checkbox" id="cfgClipboard" style="width: 18px; height: 18px;">
+          </div>
+
+          <div style="margin-top: 1.5rem; text-align: right;">
+            <button class="btn btn-primary" onclick="saveSettings()">Save Preferences</button>
+          </div>
+        </div>
+
+        <!-- Browser Extension Helper Card -->
+        <div style="max-width: 600px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-top: 1.5rem;">
+          <h2 style="font-size: 1.1rem; margin-bottom: 0.5rem;">🌐 Browser Integration</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Drag this bookmarklet button to your browser's Bookmarks Bar. When clicked on any webpage, it sends the file directly to Antigravity DM:
+          </p>
+          <a class="btn btn-secondary" style="display: inline-block; text-decoration: none;" href="javascript:(function(){var u=window.location.href;fetch('http://127.0.0.1:8080/api/queue/add?url='+encodeURIComponent(u)).then(()=>alert('Added to Antigravity DM!'))})();">
+            ⬇️ Download with Antigravity DM
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Download Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Download</h3>
+        <button class="modal-close" onclick="closeAddModal()">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Download URL or Telegram Link</label>
+        <input type="text" id="addUrl" class="form-input" placeholder="https://..." autofocus>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Save Location (Folder)</label>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" id="addSaveDir" class="form-input" placeholder="Default download directory">
+          <button type="button" class="btn btn-secondary" onclick="browseFolder('addSaveDir')">Browse...</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Custom Filename (Optional)</label>
+        <input type="text" id="addFilename" class="form-input" placeholder="Leave blank to detect automatically">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Concurrent Parts</label>
+        <input type="number" id="addParts" class="form-input" value="16" min="1" max="32">
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAddDownload()">Start Download</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    let currentScrapedItems = [];
+    let defaultDownloadDir = '';
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById('view-' + tab).classList.add('active');
+      document.getElementById('pageTitle').textContent = tab.charAt(0).toUpperCase() + tab.slice(1);
+
+      if (tab === 'settings') loadSettings();
+    }
+
+    async function browseFolder(targetId) {
+      try {
+        const resp = await fetch('/api/dialog/select-folder');
+        const data = await resp.json();
+        if (data && data.path) {
+          document.getElementById(targetId).value = data.path;
+        }
+      } catch (e) {
+        console.error('Folder selection failed:', e);
+      }
+    }
+
+    async function loadQueue() {
+      try {
+        const resp = await fetch('/api/queue/list');
+        const items = await resp.json();
+        renderQueue(items);
+      } catch (e) {}
+    }
+
+    function renderQueue(items) {
+      const container = document.getElementById('queueList');
+      if (!items || items.length === 0) {
+        container.innerHTML = '<div style="text-align: center; color: var(--text-muted); margin-top: 4rem;">No downloads in queue. Click <b>+ Add Download</b> to start.</div>';
+        return;
+      }
+
+      container.innerHTML = items.map(it => {
+        const pct = it.percentage ? it.percentage.toFixed(1) : 0;
+        const speed = it.speed_bps ? formatBytes(it.speed_bps) + '/s' : '0 B/s';
+        const downloaded = formatBytes(it.downloaded_bytes);
+        const total = formatBytes(it.total_size);
+        const saveLocation = it.destination || it.custom_dir || 'Default Folder';
+
+        return `
+          <div class="download-card">
+            <div class="card-header">
+              <div class="card-info">
+                <div class="card-title">${it.filename || it.url}</div>
+                <div class="card-subtitle">${it.is_telegram ? '⚡ Telegram MTProto' : '🌐 HTTP Stream'} • ${it.parts} connections • 📁 ${saveLocation}</div>
+              </div>
+              <div class="card-actions">
+                ${it.status === 'Downloading' ? `
+                  <button class="btn-icon" onclick="pauseItem('${it.id}')" title="Pause">⏸</button>
+                ` : `
+                  <button class="btn-icon" onclick="resumeItem('${it.id}')" title="Resume">▶</button>
+                `}
+                <button class="btn-icon" onclick="deleteItem('${it.id}')" title="Delete">🗑</button>
+              </div>
+            </div>
+
+            <div class="progress-bar-bg">
+              <div class="progress-bar-fill" style="width: ${pct}%"></div>
+            </div>
+
+            <div class="card-footer">
+              <div>
+                <span class="status-badge status-${it.status}">${it.status}</span>
+                <span style="margin-left: 0.5rem;">${pct}% (${downloaded} / ${total})</span>
+              </div>
+              <div>
+                ${it.status === 'Downloading' ? `<span>${speed} • ETA: ${it.eta}</span>` : ''}
+                ${it.error_message ? `<span style="color: var(--danger);">${it.error_message}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function pauseItem(id) { await fetch('/api/queue/pause?id=' + id); loadQueue(); }
+    async function resumeItem(id) { await fetch('/api/queue/resume?id=' + id); loadQueue(); }
+    async function deleteItem(id) {
+      if (confirm('Remove this download from the queue?')) {
+        await fetch('/api/queue/delete?id=' + id);
+        loadQueue();
+      }
+    }
+    async function pauseAll() { await fetch('/api/queue/pause-all'); loadQueue(); }
+    async function resumeAll() { await fetch('/api/queue/resume-all'); loadQueue(); }
+
+    async function openAddModal(prefillUrl = '') {
+      document.getElementById('addUrl').value = prefillUrl;
+      if (!defaultDownloadDir) {
+        try {
+          const resp = await fetch('/api/settings/get');
+          const s = await resp.json();
+          defaultDownloadDir = s.download_dir;
+        } catch (e) {}
+      }
+      document.getElementById('addSaveDir').value = defaultDownloadDir;
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() { document.getElementById('addModal').classList.remove('active'); }
+
+    async function submitAddDownload() {
+      const url = document.getElementById('addUrl').value.trim();
+      const fn = document.getElementById('addFilename').value.trim();
+      const saveDir = document.getElementById('addSaveDir').value.trim();
+      const parts = parseInt(document.getElementById('addParts').value) || 16;
+      if (!url) return;
+
+      await fetch('/api/queue/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, filename: fn, save_dir: saveDir, parts })
+      });
+
+      closeAddModal();
+      loadQueue();
+      showToast('Download added to queue!');
+    }
+
+    // Scraper
+    async function scanChannel() {
+      const url = document.getElementById('scraperUrl').value.trim();
+      const limit = parseInt(document.getElementById('scraperLimit').value) || 100;
+      if (!url) return alert('Enter a Telegram channel link');
+
+      document.getElementById('scraperLoading').style.display = 'block';
+      document.getElementById('scraperResults').style.display = 'none';
+
+      try {
+        const resp = await fetch(`/api/scraper/scan?url=${encodeURIComponent(url)}&limit=${limit}`);
+        const data = await resp.json();
+        document.getElementById('scraperLoading').style.display = 'none';
+
+        if (!resp.ok || data.error) {
+          alert('Scrape failed: ' + (data.error || 'Unknown error'));
+          return;
+        }
+
+        currentScrapedItems = data;
+        document.getElementById('scraperCount').textContent = `Found ${data.length} files`;
+        const tbody = document.getElementById('scraperTableBody');
+
+        tbody.innerHTML = data.map((item, idx) => `
+          <tr>
+            <td><input type="checkbox" class="scraper-check" data-idx="${idx}" checked></td>
+            <td><b>${item.filename}</b></td>
+            <td>${formatBytes(item.size)}</td>
+            <td>${new Date(item.date).toLocaleDateString()}</td>
+          </tr>
+        `).join('');
+
+        document.getElementById('scraperResults').style.display = 'block';
+      } catch (e) {
+        document.getElementById('scraperLoading').style.display = 'none';
+        alert('Network error: ' + e.message);
+      }
+    }
+
+    function toggleSelectAll() {
+      const checked = document.getElementById('checkAll').checked;
+      document.querySelectorAll('.scraper-check').forEach(c => c.checked = checked);
+    }
+
+    async function addSelectedToQueue() {
+      const selected = [];
+      document.querySelectorAll('.scraper-check:checked').forEach(c => {
+        const idx = parseInt(c.getAttribute('data-idx'));
+        if (currentScrapedItems[idx]) selected.push(currentScrapedItems[idx]);
+      });
+
+      if (selected.length === 0) return alert('No files selected');
+
+      for (const item of selected) {
+        await fetch('/api/queue/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: item.post_link, filename: item.filename, parts: 16 })
+        });
+      }
+
+      showToast(`Added ${selected.length} files to download queue!`);
+      switchTab('downloads');
+      loadQueue();
+    }
+
+    // Settings
+    async function loadSettings() {
+      try {
+        const resp = await fetch('/api/settings/get');
+        const s = await resp.json();
+        defaultDownloadDir = s.download_dir;
+        document.getElementById('cfgDownloadDir').value = s.download_dir;
+        document.getElementById('cfgTempDir').value = s.temp_dir;
+        document.getElementById('cfgMaxConcurrent').value = s.max_concurrent;
+        document.getElementById('cfgDefaultParts').value = s.default_parts;
+        document.getElementById('cfgClipboard').checked = s.clipboard_watcher;
+      } catch (e) {}
+    }
+
+    async function saveSettings() {
+      const payload = {
+        download_dir: document.getElementById('cfgDownloadDir').value.trim(),
+        temp_dir: document.getElementById('cfgTempDir').value.trim(),
+        max_concurrent: parseInt(document.getElementById('cfgMaxConcurrent').value) || 3,
+        default_parts: parseInt(document.getElementById('cfgDefaultParts').value) || 16,
+        clipboard_watcher: document.getElementById('cfgClipboard').checked
+      };
+
+      await fetch('/api/settings/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      defaultDownloadDir = payload.download_dir;
+      showToast('Settings saved successfully!');
+    }
+
+    function showToast(msg) {
+      const c = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.innerHTML = `<span>⚡</span> <span>${msg}</span>`;
+      c.appendChild(t);
+      setTimeout(() => t.remove(), 4000);
+    }
+
+    function formatBytes(bytes) {
+      if (!bytes || bytes <= 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Auto-refresh queue every 1s
+    setInterval(loadQueue, 1000);
+    loadQueue();
+
+    // Check for clipboard events
+    setInterval(async () => {
+      try {
+        const resp = await fetch('/api/clipboard/pop');
+        const data = await resp.json();
+        if (data && data.url) {
+          openAddModal(data.url);
+          showToast('Clipboard link detected!');
+        }
+      } catch (e) {}
+    }, 1200);
+  </script>
+</body>
+</html>
